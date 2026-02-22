@@ -1,12 +1,12 @@
-// /mnt/data/order.ts
-import { pgTable, uuid, text, timestamp, numeric } from "drizzle-orm/pg-core";
-import { clients } from "./client"; // Assuming clients table is already defined
+import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
+import { clients } from "./client";  // Import the clients table
 
 export const orders = pgTable("orders", {
-    id: uuid("id").defaultRandom().primaryKey(),
+    id: uuid("order_id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+        .references(() => clients.id, { onDelete: "cascade" })  // Correct foreign key reference with cascade on delete
+        .notNull(),
     orderNumber: text("order_number").notNull(),
-    clientId: uuid("client_id").references(clients, "id").notNull(), // Link to clients
-    total: numeric("total").notNull(),
     status: text("status").$type<'Pending' | 'Ready' | 'Picked Up' | 'Cancelled'>().default("Pending"),
-    createdAt: timestamp("created_at").defaultNow(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
 });
