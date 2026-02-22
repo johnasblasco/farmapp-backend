@@ -4,15 +4,12 @@
     "module": "CommonJS",
     "rootDir": "src",
     "outDir": "dist",
-    "baseUrl": "src",
-    "paths": {
-      "@/*": [
-        "*"
-      ]
-    },
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "moduleResolution": "node"
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true
   },
   "include": [
     "src"

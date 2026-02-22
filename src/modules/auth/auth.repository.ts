@@ -1,5 +1,5 @@
-import { db } from "@/db";
-import { users } from "@/db/schema/user";
+import { db } from "../../db";
+import { users } from "../../db/schema/user";
 import { eq } from "drizzle-orm";
 
 export const authRepository = {
