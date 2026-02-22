@@ -6,6 +6,7 @@ import { errorHandler } from "./middlewares/errorHandler";
 import authRoutes from "./modules/auth/auth.routes";
 import farmerRoutes from "./modules/farmer/farmer.routes";
 import deliveryRoutes from "./modules/delivery/delivery.routes";
+import clientRoutes from './modules/client/client.routes'
 const app = express();
 
 // Core middlewares
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/farmer", farmerRoutes);
 app.use("/api/delivery", deliveryRoutes);
+app.use("/api/client", clientRoutes);
 
 // 404 + error handler
 app.use(notFoundHandler);

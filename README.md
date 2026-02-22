@@ -1,167 +1,247 @@
-# dynamic-setup-backend
-Farmer Module Documentation
-=======================
+API Documentation
 
-Overview
+This documentation describes the core modules in the API and their routes: Auth, Farmer, Client, and Delivery.
 
-The Farmer module handles the management of farmer-related data, including fetching and updating orders and profiles. It includes functionality to mark orders as ready, picked up, or canceled, as well as deleting orders. Additionally, farmers can view and update their profiles.
+Core Middleware
 
-This documentation provides the routes, services, and repositories involved in the Farmer module.
+The API uses the following middleware:
+
+CORS: Configured to allow requests from the specified origin (env.CORS_ORIGIN).
+
+JSON Body Parsing: Allows the parsing of JSON payloads.
+
+URL Encoding: Allows the handling of URL-encoded data.
+
+Error Handlers: Includes notFoundHandler for 404 responses and errorHandler for general error handling.
 
 Routes
 
-The Farmer module provides the following routes. All routes are protected by authentication middleware (authMiddleware).
+The following routes are used to manage auth, farmer, client, and delivery modules. Each module has its own set of endpoints, organized under specific routes.
 
-Orders
-Method	Route	Description	Controller Method
-GET	/orders	Fetch all orders for the authenticated farmer.	getOrders
-PATCH	/orders/:id/ready	Mark the order as "Ready".	markReady
-PATCH	/orders/:id/picked-up	Mark the order as "Picked Up".	markPickedUp
-PATCH	/orders/:id/cancel	Cancel the order.	cancelOrder
-DELETE	/orders/:id	Delete the order.	deleteOrder
-Profile
-Method	Route	Description	Controller Method
-GET	/profile	Fetch the profile of the authenticated farmer.	getProfile
-PATCH	/profile	Update the profile of the authenticated farmer.	updateProfile
-Controller
+Authentication Routes
 
-Farmer Controller Methods
-The Farmer Controller handles all incoming requests related to farmer data and interacts with the Farmer Service to perform business logic.
-
-text
-import { Request, Response } from "express";
-import { farmerService } from "./farmer.service";
-
-export const farmerController = {
-    // Fetch orders for the farmer
-    getOrders: async (req: Request, res: Response) => { ... },
-
-    // Mark order as ready
-    markReady: async (req: Request, res: Response) => { ... },
-
-    // Mark order as picked up
-    markPickedUp: async (req: Request, res: Response) => { ... },
-
-    // Cancel order
-    cancelOrder: async (req: Request, res: Response) => { ... },
-
-    // Delete order
-    deleteOrder: async (req: Request, res: Response) => { ... },
-
-    // Fetch farmer profile
-    getProfile: async (req: Request, res: Response) => { ... },
-
-    // Update farmer profile
-    updateProfile: async (req: Request, res: Response) => { ... },
-};
-Each method corresponds to a route and handles the request-response cycle, calling the Farmer Service to perform the necessary actions.
-
-Service
-
-Farmer Service Methods
-The Farmer Service abstracts the business logic. It interacts with the Farmer Repository to fetch and manipulate data related to orders and profiles.
-
-text
-import { farmerRepository } from "./farmer.repository";
-
-export const farmerService = {
-    getOrders: async (farmerId: string) => {
-        return farmerRepository.getOrders(farmerId);  // Fetch orders for the farmer
-    },
-
-    markReady: async (id: string) => {
-        return farmerRepository.updateOrderStatus(id, "Ready");  // Mark order as "Ready"
-    },
-
-    markPickedUp: async (id: string) => {
-        return farmerRepository.updateOrderStatus(id, "Picked Up");  // Mark order as "Picked Up"
-    },
-
-    cancelOrder: async (id: string) => {
-        return farmerRepository.updateOrderStatus(id, "Cancelled");  // Cancel order
-    },
-
-    deleteOrder: async (id: string) => {
-        return farmerRepository.deleteOrder(id);  // Delete order
-    },
-
-    getProfile: async (farmerId: string) => {
-        return farmerRepository.getProfile(farmerId);  // Fetch farmer profile
-    },
-
-    updateProfile: async (farmerId: string, data: any) => {
-        return farmerRepository.updateProfile(farmerId, data);  // Update farmer profile
-    },
-};
-Repository
-
-Farmer Repository Methods
-The Farmer Repository directly interacts with the database to fetch and modify data for farmers and orders. It uses drizzle-orm to query the database.
-
-text
-import { db } from "../../db";
-import { orders, farmers } from "../../db/schema";
-import { eq } from "drizzle-orm";
-
-export const farmerRepository = {
-    getOrders: async (farmerId: string) => {
-        return db.select().from(orders)
-            .where(eq(orders.farmerId, farmerId));  // Fetch orders for the farmer
-    },
-
-    updateOrderStatus: async (id: string, status: string) => {
-        return db.update(orders)
-            .set({ status })
-            .where(eq(orders.id, id))
-            .returning();
-    },
-
-    deleteOrder: async (id: string) => {
-        return db.delete(orders).where(eq(orders.id, id));
-    },
-
-    getProfile: async (farmerId: string) => {
-        return db.select().from(farmers).where(eq(farmers.id, farmerId));  // Fetch farmer profile
-    },
-
-    updateProfile: async (farmerId: string, data: any) => {
-        return db.update(farmers)
-            .set(data)
-            .where(eq(farmers.id, farmerId))
-            .returning();
-    },
-};
-Authentication Middleware
-
-The authMiddleware ensures that routes are protected by checking the JWT token and attaching the authenticated user to the req.user object.
-
-text
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.headers.authorization?.split(" ")[1];  // Assuming Bearer token
-
-    if (!token) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET as string, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ error: "Unauthorized" });
-        }
-
-        req.user = decoded;  // Attach user info to the request
-        next();
-    });
-};
-Summary of Routes
+All authentication-related routes are prefixed with /api/auth.
 
 Method	Route	Description
-GET	/orders	Fetch orders for the authenticated farmer
-PATCH	/orders/:id/ready	Mark order as ready
-PATCH	/orders/:id/picked-up	Mark order as picked up
-PATCH	/orders/:id/cancel	Cancel the order
-DELETE	/orders/:id	Delete the order
-GET	/profile	Fetch farmer profile
-PATCH	/profile	Update farmer profile
+POST	/login	Login a user and generate JWT token.
+POST	/register	Register a new user.
+POST	/refresh-token	Refresh an expired JWT token.
+Farmer Routes
+
+All routes related to farmers are prefixed with /api/farmer.
+
+Method	Route	Description
+GET	/orders	Fetch all orders assigned to the authenticated farmer.
+PATCH	/orders/:id/ready	Mark the order as "Ready".
+PATCH	/orders/:id/picked-up	Mark the order as "Picked Up".
+PATCH	/orders/:id/cancel	Cancel the order.
+DELETE	/orders/:id	Delete the order.
+GET	/profile	Get the authenticated farmer’s profile.
+PATCH	/profile	Update the authenticated farmer’s profile.
+Client Routes
+
+All routes related to clients are prefixed with /api/client.
+
+Method	Route	Description
+GET	/orders	Fetch all orders for the authenticated client.
+PATCH	/orders/:id/ready	Mark the order as "Ready".
+PATCH	/orders/:id/picked-up	Mark the order as "Picked Up".
+PATCH	/orders/:id/cancel	Cancel the order.
+DELETE	/orders/:id	Delete the order.
+GET	/profile	Get the authenticated client's profile.
+PATCH	/profile	Update the authenticated client's profile.
+Delivery Routes
+
+All routes related to deliveries are prefixed with /api/delivery.
+
+Method	Route	Description
+GET	/deliveries	Fetch all deliveries assigned to the authenticated rider.
+PATCH	/deliveries/:id/assign-rider	Assign a rider to a delivery.
+PATCH	/deliveries/:id/status	Update the delivery status (e.g., "In Progress", "Completed").
+DELETE	/deliveries/:id	Delete the delivery.
+Module Details
+Auth Module
+
+The Auth module handles user authentication, including login, registration, and token refreshing.
+
+Auth Controller
+
+Manages the login, registration, and token refreshing logic.
+
+Auth Repository
+
+Handles database operations related to user authentication (e.g., user validation, token storage).
+
+Auth Routes
+
+Defines the routes for login, registration, and token refreshing.
+
+Auth Service
+
+Abstracts the business logic for user authentication.
+
+Farmer Module
+
+The Farmer module handles the management of farmer-related data and actions such as fetching orders, updating order statuses, and managing the farmer's profile.
+
+Farmer Controller
+
+Handles the requests for farmer-related actions like fetching orders, marking orders as ready, or updating the farmer's profile.
+
+Farmer Repository
+
+Contains the database logic for fetching and updating orders and profiles for farmers.
+
+Farmer Routes
+
+Defines the routes for managing orders and farmer profiles.
+
+Farmer Service
+
+Abstracts the business logic and interacts with the repository to manage orders and profiles.
+
+Client Module
+
+The Client module handles the management of client-related data and actions such as fetching orders, updating order statuses, and managing the client's profile.
+
+Client Controller
+
+Handles the requests for client-relaAPI Documentation
+==================
+
+This documentation describes the core modules in the API and their routes: **Auth**, **Farmer**, **Client**, and **Delivery**.
+
+Core Middleware
+---------------
+
+The API uses the following middleware:
+
+*   **CORS**: Configured to allow requests from the specified origin (`env.CORS_ORIGIN`).
+*   **JSON Body Parsing**: Allows the parsing of JSON payloads.
+*   **URL Encoding**: Allows the handling of URL-encoded data.
+*   **Error Handlers**: Includes `notFoundHandler` for 404 responses and `errorHandler` for general error handling.
+
+Routes
+------
+
+The following routes are used to manage auth, farmer, client, and delivery modules. Each module has its own set of endpoints, organized under specific routes.
+
+### Authentication Routes
+
+All authentication-related routes are prefixed with `/api/auth`.
+
+| Method | Route             | Description                          |
+|--------|-------------------|--------------------------------------|
+| POST   | `/login`          | Login a user and generate JWT token. |
+| POST   | `/register`       | Register a new user.                 |
+| POST   | `/refresh-token`  | Refresh an expired JWT token.        |
+
+### Farmer Routes
+
+All routes related to farmers are prefixed with `/api/farmer`.
+
+| Method | Route                    | Description                                     |
+|--------|--------------------------|-------------------------------------------------|
+| GET    | `/orders`                | Fetch all orders assigned to the authenticated farmer. |
+| PATCH  | `/orders/:id/ready`      | Mark the order as "Ready".                      |
+| PATCH  | `/orders/:id/picked-up`  | Mark the order as "Picked Up".                  |
+| PATCH  | `/orders/:id/cancel`     | Cancel the order.                               |
+| DELETE | `/orders/:id`            | Delete the order.                               |
+| GET    | `/profile`               | Get the authenticated farmer’s profile.         |
+| PATCH  | `/profile`               | Update the authenticated farmer’s profile.      |
+
+### Client Routes
+
+All routes related to clients are prefixed with `/api/client`.
+
+| Method | Route                    | Description                                     |
+|--------|--------------------------|-------------------------------------------------|
+| GET    | `/orders`                | Fetch all orders for the authenticated client.  |
+| PATCH  | `/orders/:id/ready`      | Mark the order as "Ready".                      |
+| PATCH  | `/orders/:id/picked-up`  | Mark the order as "Picked Up".                  |
+| PATCH  | `/orders/:id/cancel`     | Cancel the order.                               |
+| DELETE | `/orders/:id`            | Delete the order.                               |
+| GET    | `/profile`               | Get the authenticated client's profile.         |
+| PATCH  | `/profile`               | Update the authenticated client's profile.      |
+
+### Delivery Routes
+
+All routes related to deliveries are prefixed with `/api/delivery`.
+
+| Method | Route                         | Description                                            |
+|--------|-------------------------------|--------------------------------------------------------|
+| GET    | `/deliveries`                 | Fetch all deliveries assigned to the authenticated rider. |
+| PATCH  | `/deliveries/:id/assign-rider`| Assign a rider to a delivery.                          |
+| PATCH  | `/deliveries/:id/status`      | Update the delivery status (e.g., "In Progress", "Completed"). |
+| DELETE | `/deliveries/:id`             | Delete the delivery.                                   |
+
+Module Details
+--------------
+
+### Auth Module
+
+The Auth module handles user authentication, including login, registration, and token refreshing.
+
+*   **Auth Controller**: Manages the login, registration, and token refreshing logic.
+*   **Auth Repository**: Handles database operations related to user authentication (e.g., user validation, token storage).
+*   **Auth Routes**: Defines the routes for login, registration, and token refreshing.
+*   **Auth Service**: Abstracts the business logic for user authentication.
+
+### Farmer Module
+
+The Farmer module handles the management of farmer-related data and actions such as fetching orders, updating order statuses, and managing the farmer's profile.
+
+*   **Farmer Controller**: Handles the requests for farmer-related actions like fetching orders, marking orders as ready, or updating the farmer's profile.
+*   **Farmer Repository**: Contains the database logic for fetching and updating orders and profiles for farmers.
+*   **Farmer Routes**: Defines the routes for managing orders and farmer profiles.
+*   **Farmer Service**: Abstracts the business logic and interacts with the repository to manage orders and profiles.
+
+### Client Module
+
+The Client module handles the management of client-related data and actions such as fetching orders, updating order statuses, and managing the client's profile.
+
+*   **Client Controller**: Handles the requests for client-related actions, including managing orders and profiles.
+*   **Client Repository**: Contains the database logic for fetching and updating orders and profiles for clients.
+*   **Client Routes**: Defines the routes for managing client orders and profiles.
+*   **Client Service**: Abstracts the business logic for managing client orders and profiles.
+
+### Delivery Module
+
+The Delivery module handles the management of deliveries, including assigning riders to deliveries and updating the status of deliveries.
+
+*   **Delivery Controller**: Handles requests for delivery-related actions, such as assigning riders and updating delivery statuses.
+*   **Delivery Repository**: Contains the database logic for managing deliveries and updating statuses.
+*   **Delivery Routes**: Defines the routes for managing deliveries, including assigning riders and updating statuses.
+*   **Delivery Service**: Abstracts the business logic for managing deliveries.ted actions, including managing orders and profiles.
+
+Client Repository
+
+Contains the database logic for fetching and updating orders and profiles for clients.
+
+Client Routes
+
+Defines the routes for managing client orders and profiles.
+
+Client Service
+
+Abstracts the business logic for managing client orders and profiles.
+
+Delivery Module
+
+The Delivery module handles the management of deliveries, including assigning riders to deliveries and updating the status of deliveries.
+
+Delivery Controller
+
+Handles requests for delivery-related actions, such as assigning riders and updating delivery statuses.
+
+Delivery Repository
+
+Contains the database logic for managing deliveries and updating statuses.
+
+Delivery Routes
+
+Defines the routes for managing deliveries, including assigning riders and updating statuses.
+
+Delivery Service
+
+Abstracts the business logic for managing deliveries.
