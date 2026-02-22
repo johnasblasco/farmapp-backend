@@ -1,30 +1,33 @@
+// /mnt/data/delivery.repository.ts
 import { db } from "../../db";
-import { deliveries } from "../../db/schema/delivery";
-import { eq } from "drizzle-orm";
+import { deliveries, orders, users } from "../../db/schema";  // Make sure orders and users are imported
+import { eq, and } from "drizzle-orm";
 
 export const deliveryRepository = {
-
-    getAvailable: async () => {
+    // Fetch deliveries for a rider
+    getDeliveries: async (riderId: string) => {
         return db.select().from(deliveries)
-            .where(eq(deliveries.status, "available"));
+            .where(eq(deliveries.riderId, riderId));  // Link deliveries to the rider (user)
     },
 
-    accept: async (id: string, riderId: string) => {
+    // Fetch all deliveries (with filtering capabilities)
+    getAllDeliveries: async () => {
+        return db.select().from(deliveries);
+    },
+
+    // Update delivery status
+    updateStatus: async (deliveryId: string, status: string) => {
         return db.update(deliveries)
-            .set({ status: "in-progress", riderId })
-            .where(eq(deliveries.id, id))
+            .set({ status })
+            .where(eq(deliveries.id, deliveryId))
             .returning();
     },
 
-    complete: async (id: string) => {
+    // Assign rider to delivery
+    assignRider: async (deliveryId: string, riderId: string) => {
         return db.update(deliveries)
-            .set({ status: "completed" })
-            .where(eq(deliveries.id, id))
+            .set({ riderId })
+            .where(eq(deliveries.id, deliveryId))
             .returning();
-    },
-
-    history: async (riderId: string) => {
-        return db.select().from(deliveries)
-            .where(eq(deliveries.riderId, riderId));
     }
 };

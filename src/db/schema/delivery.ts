@@ -1,20 +1,17 @@
+// /mnt/data/delivery.ts
 import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
+import { users } from "./user"; // Assuming users table is already defined
+import { orders } from "./order"; // Assuming orders table is already defined
 
 export const deliveries = pgTable("deliveries", {
     id: uuid("id").defaultRandom().primaryKey(),
-
+    orderId: uuid("order_id").references(orders, "id").notNull(), // Link to orders
+    riderId: uuid("rider_id").references(users, "id"), // Link to users (rider)
     orderNumber: text("order_number").notNull(),
     customer: text("customer").notNull(),
-
     pickup: text("pickup").notNull(),
     dropoff: text("dropoff").notNull(),
-
-    riderId: uuid("rider_id"),
-
-    status: text("status").default("available"),
-    // available | in-progress | completed
-
+    status: text("status").default("available"), // available | in-progress | completed
     earnings: text("earnings").notNull(),
-
     createdAt: timestamp("created_at").defaultNow(),
 });

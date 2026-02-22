@@ -1,3 +1,4 @@
+// /mnt/data/farmer.ts
 import { pgTable, uuid, text } from "drizzle-orm/pg-core";
 
 export const farmers = pgTable("farmers", {

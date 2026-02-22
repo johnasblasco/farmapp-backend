@@ -1,20 +1,20 @@
-import { deliveryRepository } from "./delivery.repository";
+// /mnt/data/delivery.service.ts
+import { deliveryRepository } from "./delivery.repository";  // Ensure deliveryRepository is imported
 
 export const deliveryService = {
-
-    getAvailable: async () => {
-        return deliveryRepository.getAvailable();
+    getDeliveries: async (riderId: string) => {
+        return deliveryRepository.getDeliveries(riderId);  // Fetch deliveries for a specific rider
     },
 
-    acceptTask: async (taskId: string, riderId: string) => {
-        return deliveryRepository.accept(taskId, riderId);
+    getAllDeliveries: async () => {
+        return deliveryRepository.getAllDeliveries();  // Fetch all deliveries (admin)
     },
 
-    completeTask: async (taskId: string) => {
-        return deliveryRepository.complete(taskId);
+    updateStatus: async (deliveryId: string, status: string) => {
+        return deliveryRepository.updateStatus(deliveryId, status);  // Update delivery status
     },
 
-    getHistory: async (riderId: string) => {
-        return deliveryRepository.history(riderId);
+    assignRider: async (deliveryId: string, riderId: string) => {
+        return deliveryRepository.assignRider(deliveryId, riderId);  // Assign a rider to a delivery
     }
 };
