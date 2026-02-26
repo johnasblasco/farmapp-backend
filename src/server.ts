@@ -4,7 +4,7 @@ import { env } from "./config/env";
 import { logger } from "./config/logger";
 import { closeDb } from "./db";
 
-const port = Number(env.PORT) || 4000;
+const port = Number(env.PORT) || 8000;
 
 const server = http.createServer(app);
 
