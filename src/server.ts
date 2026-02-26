@@ -4,7 +4,7 @@ import { env } from "./config/env";
 import { logger } from "./config/logger";
 import { closeDb } from "./db";
 
-const port = process.env.PORT ? Number(process.env.PORT) : 4000;
+const port = process.env.PORT ?  10000 : Number(process.env.PORT);
 
 const server = http.createServer(app);
 
