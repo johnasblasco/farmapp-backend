@@ -7,11 +7,11 @@ export const farmerRepository = {
     // Fetch orders for the farmer (linked to farmerId)
     getOrders: async (farmerId: string) => {
         return db.select().from(orders)
-            .where(eq(orders.farmerId, farmerId));  // Ensure orders are linked to the farmer
+            .where(eq(orders.clientId, farmerId));  // Ensure orders are linked to the farmer
     },
 
     // Update order status (used in markReady, markPickedUp, cancelOrder)
-    updateOrderStatus: async (id: string, status: string) => {
+    updateOrderStatus: async (id: string, status: "Pending" | "Ready" | "Picked Up" | "Cancelled") => {
         return db.update(orders)
             .set({ status })
             .where(eq(orders.id, id))

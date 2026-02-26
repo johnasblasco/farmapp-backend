@@ -1,7 +1,7 @@
 // /mnt/data/example.repository.ts
 import { db } from "../../db";
 import { orders, clients } from "../../db/schema";  // Make sure to import the clients schema
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export const clientRepository = {
     // Fetch orders for the client
@@ -20,9 +20,11 @@ export const clientRepository = {
 
     // Fetch the client dashboard data (example)
     getDashboardData: async (clientId: string) => {
-        return db.select().from(orders)
+        return db.select({
+            status: orders.status,
+            count: sql<number>`count(*)`.mapWith(Number)
+        }).from(orders)
             .where(eq(orders.clientId, clientId))  // Ensure orders are linked to clients via clientId
-            .groupBy(orders.status) // Modify as needed
-            .count();
+            .groupBy(orders.status); // Modify as needed
     }
 };
